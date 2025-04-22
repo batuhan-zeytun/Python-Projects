@@ -1,57 +1,44 @@
-# main.py
-
 import time
 from turtle import Screen
 from player import Player
 from car_manager import CarManager
 from scoreboard import Scoreboard
 
-class TurtleCrossingGame:
-    def __init__(self):
-        self.screen = Screen()
-        self.screen.setup(width=600, height=600)
-        self.screen.tracer(0)
+screen = Screen()
+screen.setup(width=600, height=600)
+screen.tracer(0)
 
-        choice = self.screen.textinput(
-            "Zorluk Seviyesi",
-            "Kolay, Orta veya Zor? "
-        )
-        choice = choice.lower() if choice else "kolay"
-        spawn_map = {"kolay": 0.1, "orta": 0.2, "zor": 0.4}
-        spawn_chance = spawn_map.get(choice, 0.1)
+player = Player()
+car_manager = CarManager()
+scoreboard = Scoreboard()
 
-        self.player = Player()
-        self.car_manager = CarManager(spawn_chance=spawn_chance)
-        self.scoreboard = Scoreboard()
 
-        self.screen.listen()
-        self.screen.onkey(self.player.move, "Up")
-        self.game_is_on = True
+screen.listen()
+screen.onkey(player.move, "Up")
 
-    def run(self):
-        while self.game_is_on:
-            time.sleep(0.1)
-            self.screen.update()
-            self.car_manager.move_cars()
 
-            self._check_finish_line()
-            self._check_collisions()
+#screen.listen()
+#screen.onkey(player.move, "Up")
 
-        self.scoreboard.game_over()
-        self.screen.exitonclick()
+game_is_on = True
+while game_is_on:
+    time.sleep(0.1)
+    screen.update()
+    car_manager.create_car()
+    car_manager.move_cars()
+    if player.is_at_finish_line():
+        car_manager.remove_cars()
+        scoreboard.increase_score()
+        player.reset_position()
+        car_manager.reset()
+        continue
 
-    def _check_finish_line(self):
-        if self.player.is_at_finish_line():
-            self.scoreboard.increase_score()
-            self.player.reset_position()
-            self.car_manager.reset()
+    for car in car_manager.cars:
+        if player.distance(car) < 20:  # 20 limiti deneyebilirsin
+            # çarpışma oldu, game over yazdır
+            scoreboard.game_over()       # veya direkt Turtle ile yazdır
+            game_is_on = False
 
-    def _check_collisions(self):
-        for car in self.car_manager.cars:
-            if self.player.distance(car) < 20:
-                self.game_is_on = False
-                break
 
-if __name__ == "__main__":
-    game = TurtleCrossingGame()
-    game.run()
+
+screen.exitonclick()
